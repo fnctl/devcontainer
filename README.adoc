@@ -1,0 +1,66 @@
+= ghcr.io/lgmn-io/devcontainer:main
+Jake Logemann <jake@lgmn.io>
+0.1, March 2022: devcontainer documentation
+:toc:
+:icons: font
+:url-quickref: https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/
+:json-ref: https://code.visualstudio.com/docs/remote/devcontainerjson-reference
+:asciidoc-ref: https://docs.asciidoctor.org/asciidoc/latest/
+
+
+Yes, it's written in {asciidoc-ref}[AsciiDoc]. footnote:[*NOTE* _For longer, more formal documents (such as I hope this one will be), I (personally) find
+AsciiDoc to be more useful. If you haven't used it before, its very similar to
+Markdown but easier to modify pragmatically._]
+
+== Use it in a devcontainer.json 
+
+There is great documentation for configuring this... see the official
+{json-ref}[devcontainer.json reference] for more details. 
+
+[source,json,linenums]
+.devcontainer.json for this project.
+----
+{ 
+  "name": "devcontainer",
+  "runArgs": [
+    "--cap-add=SYS_PTRACE",
+    "--security-opt=seccomp=unconfined",
+    "--tmpfs=/run/containers"
+  ],
+  "remoteUser": "root",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".",
+    "cacheFrom": "ghcr.io/lgmn-io/devcontainer:main"
+  },
+  "hostRequirements": {
+    "cpus": 1,
+    "memory": "512mb",
+    "storage": "1gb"
+  },
+  "codespaces": {
+
+  },
+  "extensions": [
+    "asciidoctor.asciidoctor-vscode"
+  ]
+}
+----
+
+
+== Local Development
+
+If you'd like to contribute to this (or any other branch) of this repo, you'll
+need a few things: `make`, `docker` and probably VSCode (if only to test that
+things work properly).
+
+.Makefile commands
+[cols="h,~",grid=rows,stripes=even]
+|===
+|If you run... | _this project_ will...
+
+|`make build` | Builds the image (if no `.image-id` file is present).
+|`make clean` | Removes `.image-id` (if present) to allow rebuilding.
+|`make run`  | Builds the image (if no `.image-id` file is present), then runs an interactive shell for debugging. 
+|`make` | Equivalent to `make clean build run`. Just lazier.
+|===

@@ -1,0 +1,4 @@
+# Note that the Makefile is NOT copied into the Dockerfile AT ALL. This is intentional.
+Makefile
+.image-id
+.github

@@ -1,0 +1,65 @@
+name: image
+
+on:
+  workflow_dispatch:
+  schedule: [{ cron: "0 0 * * *" }]
+  pull_request: { branches: ["*"], paths-ignore: ["*.adoc", "Makefile"]  }
+  push: { branches: ["*"], paths-ignore: ["*.adoc", "Makefile"] }
+
+jobs:
+  build:
+    if: ${{ github.ref_protected && github.ref_type == 'branch' }}
+    runs-on: ubuntu-latest
+    permissions: 
+      contents: read
+      pull-requests: read
+      packages: write
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_URI: ghcr.io/${{ github.repository }}
+      IMAGE_TAG: ${{ github.ref_name }}
+      PUBLISH: "${{ github.event_name != 'schedule' && github.event_name != 'pull_request' }}"
+    steps:
+    - name: clone the project.
+      uses: actions/checkout@v2
+
+    - name: login to registry.
+      run: |-
+        docker login ${{env.REGISTRY}} \
+          --username=${{github.actor}} \
+          -p "${{github.token}}" 2>/dev/null 
+
+    - name: build image.
+      run: |-
+        docker build \
+          --iidfile=".image-id" \
+          --file="Dockerfile" \
+          --tag="${{ env.IMAGE_URI }}:${{ github.ref_name }}" \
+          --cache-from="${{ env.IMAGE_URI }}:${{ github.ref_name }}" \
+          --label="github.actor=${{ github.actor }}" \
+          --label="github.event.name=${{ github.event_name }}" \
+          --label="github.job=${{github.job}}" \
+          --label="github.ref=${{github.ref_name}}" \
+          --label="github.ref_type=${{github.ref_type}}" \
+          --label="github.repository=${{github.repository}}" \
+          --label="github.run.id=${{github.run_id}}" \
+          --label="github.run.number=${{github.run_number}}" \
+          --label="github.sha=${{github.sha}}" \
+          --label="github.workflow=${{github.workflow}}" \
+          "." && echo IMAGE_ID=$(cat .image-id) >>$GITHUB_ENV \
+          && echo IMAGE_SIZE=$(docker inspect -f '{{.Size}}' $(cat .image-id)) >>$GITHUB_ENV \
+          && echo "::notice::Image ID is $(cat .image-id)" \
+          && echo "::notice::Image Size is $(( $(docker inspect -f '{{.Size}}' $(cat .image-id)) / 1024 / 1024 ))M" 
+
+    - name: inspect.
+      run: docker inspect ${{ env.IMAGE_ID }} | jq -CSer '.' 
+
+    - name: publish image?
+      if: ${{ env.PUBLISH == 'true' }}
+      run: docker push -a "${{env.IMAGE_URI}}"
+
+    - name: logout from registry.
+      if: ${{ always() }}
+      run: docker logout ${{env.REGISTRY}}
+
+  
