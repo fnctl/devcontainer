@@ -1,4 +1,4 @@
-= ghcr.io/lgmn-io/devcontainer:main
+= ghcr.io/fnctl/devcontainer:main
 Jake Logemann <jake@lgmn.io>
 0.1, March 2022: devcontainer documentation
 :toc:
@@ -31,7 +31,7 @@ There is great documentation for configuring this... see the official
   "build": {
     "dockerfile": "Dockerfile",
     "context": ".",
-    "cacheFrom": "ghcr.io/lgmn-io/devcontainer:main"
+    "cacheFrom": "ghcr.io/fnctl/devcontainer:main"
   },
   "hostRequirements": {
     "cpus": 1,
